@@ -1,0 +1,13 @@
+.eslintcache
+.vscode
+.DS_Store
+node_modules
+coverage
+dist
+
+.env
+.envrc
+
+debug
+*.log
+logs/
