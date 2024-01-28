@@ -11,14 +11,14 @@
     "build:helloWorld": "nest build helloWorld",
     "start:helloWorld": "nest start helloWorld",
     "start:helloWorld:gcf": "pnpm build:helloWorld && cross-env RUNNING_IN_GCF=true functions-framework --source=dist/src/helloWorld/main.js --target=helloWorld",
-    "watch:helloWorld": "nest start functions-framework --source=src/helloWorld/main.ts --target=helloWorld --watch",
-    "debug:helloWorld": "nest start functions-framework --source=src/helloWorld/main.ts --target=helloWorld --debug --watch",
-    "start:helloWorld:prod": "node dist/main",
-    "test:helloWorld": "jest functions-framework --target=helloWorld",
-    "test:helloWorld:watch": "jest functions-framework --target=helloWorld --watch",
-    "test:helloWorld:cov": "jest functions-framework --target=helloWorld --coverage",
-    "test:helloWorld:debug": "node functions-framework --target=helloWorld --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:helloWorld:e2e": "jest functions-framework --target=helloWorld --config ./test/jest-e2e.json"
+    // "watch:helloWorld": "nest start functions-framework --source=src/helloWorld/main.ts --target=helloWorld --watch",
+    // "debug:helloWorld": "nest start functions-framework --source=src/helloWorld/main.ts --target=helloWorld --debug --watch",
+    // "start:helloWorld:prod": "node dist/main",
+    // "test:helloWorld": "jest functions-framework --target=helloWorld",
+    // "test:helloWorld:watch": "jest functions-framework --target=helloWorld --watch",
+    // "test:helloWorld:cov": "jest functions-framework --target=helloWorld --coverage",
+    // "test:helloWorld:debug": "node functions-framework --target=helloWorld --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+    // "test:helloWorld:e2e": "jest functions-framework --target=helloWorld --config ./test/jest-e2e.json"
   },
   "dependencies": {
     "@google-cloud/functions-framework": "^3.3.0",

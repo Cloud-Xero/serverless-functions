@@ -10,6 +10,7 @@ export const createNestServer = async (server) => {
     new ExpressAdapter(server),
   );
 
+  // CORSの有効
   app.enableCors();
 
   return app.init();
@@ -24,6 +25,7 @@ const bootstrap = async () => {
       .then(() => console.log('Nest Ready'))
       .catch((err) => console.error('Nest broken', err));
 
+    // functions-frameworkにhelloWorldを登録
     exports.api = functions.http('helloWorld', server);
   } else {
     // 通常のサーバー起動（毎回ビルドしながら開発するのが面倒な場合はこっち）
