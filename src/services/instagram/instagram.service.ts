@@ -26,13 +26,41 @@ export class InstagramService {
    * 画像URLとキャプションからコンテナIDを取得
    * @returns コンテナID
    */
-  private getContainerId = async (): Promise<string> => {
+  private getContainerId = async (
+    imagePath: string,
+    caption: string,
+  ): Promise<string> => {
     const updatedRequestOptions = {
       ...this.requestOptions,
       params: {
         ...this.requestOptions.params,
-        image_url: 'Notionから取得した画像URL',
-        caption: 'Notionから取得したキャプション',
+        image_url: imagePath,
+        caption,
+      },
+    };
+    const endpoint = `${process.env.INSTAGRAM_GRAPH_BASE_PATH}/${process.env.INSTAGRAM_ACCOUNT_ID_01}/media`;
+    const res: AxiosResponse = await lastValueFrom(
+      this.httpService.post(endpoint, {}, updatedRequestOptions),
+    );
+    console.log('res.data.id', res.data.id);
+    return res.data.id as string;
+  };
+
+  /**
+   * カルーセル用のアイテムコンテナIDを取得
+   * @param mediaPath メディアのURL
+   * @returns アイテムコンテナID
+   */
+  private getItemContainerId = async (mediaPath: string) => {
+    // TODO: 画像か動画化の判断が必要
+    const updatedRequestOptions = {
+      ...this.requestOptions,
+      params: {
+        ...this.requestOptions.params,
+        is_carousel_item: true,
+        image_url: mediaPath,
+        video_path: mediaPath,
+        media_type: 'VIDEO',
       },
     };
     const endpoint = `${process.env.INSTAGRAM_GRAPH_BASE_PATH}/${process.env.INSTAGRAM_ACCOUNT_ID_01}/media`;
@@ -78,10 +106,12 @@ export class InstagramService {
 
   /**
    * Instagaramにフィード投稿（写真１枚）
+   * @param imagePath 画像のURL
+   * @param caption 投稿のキャプション文
    * @returns
    */
-  executePostingFeed = async () => {
-    const containerId = await this.getContainerId();
+  executePostingFeed = async (imagePath: string, caption: string) => {
+    const containerId = await this.getContainerId(imagePath, caption);
     const updatedRequestOptions = {
       ...this.requestOptions,
       params: {
@@ -101,7 +131,14 @@ export class InstagramService {
    * Instagaramにフィード投稿（写真　複数枚）
    * @returns
    */
-  executePostingCarousel = () => {};
+  executePostingCarousel = (mediaPathList: string[], caption: string) => {
+    const containerIdList = mediaPathList.map((path) => {
+      return this.getItemContainerId(path);
+    });
+    const childrenQueryString = containerIdList
+      .map((id) => `children=${id}`)
+      .join('&');
+  };
 
   /**
    * Instagaramにリール動画を投稿
