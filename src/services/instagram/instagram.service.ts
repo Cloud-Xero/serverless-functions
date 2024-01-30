@@ -72,6 +72,50 @@ export class InstagramService {
   };
 
   /**
+   * カルーセルコンテナIDを取得
+   * @param idList
+   * @param caption
+   * @returns
+   */
+  private getCarouselContainerId = async (
+    idList: string[],
+    caption: string,
+  ) => {
+    const captionQueryString = `caption=${caption}`;
+    const mediaQueryString = 'media_type=CAROUSEL';
+    const childrenQueryString = idList.map((id) => `children=${id}`).join('&');
+    const tokenQueryString = `access_token=${this.requestOptions.params.access_token}`;
+    const endpoint = `${process.env.INSTAGRAM_GRAPH_BASE_PATH}/${process.env.INSTAGRAM_ACCOUNT_ID_01}/media?${captionQueryString}&${mediaQueryString}&${childrenQueryString}&${tokenQueryString}`;
+
+    const res: AxiosResponse = await lastValueFrom(
+      this.httpService.post(endpoint),
+    );
+    console.log('res.data.id', res.data.id);
+    return res.data.id;
+  };
+
+  /**
+   * メディアの投稿
+   * @param creationId
+   * @returns ステータスID
+   */
+  private postMedia = async (creationId: string): Promise<number> => {
+    const updatedRequestOptions = {
+      ...this.requestOptions,
+      params: {
+        ...this.requestOptions.params,
+        creation_id: creationId,
+      },
+    };
+    const endpoint = `${process.env.INSTAGRAM_GRAPH_BASE_PATH}/${process.env.INSTAGRAM_ACCOUNT_ID_01}/media_publish`;
+    const res = await lastValueFrom(
+      this.httpService.post(endpoint, {}, updatedRequestOptions),
+    );
+
+    return res.status;
+  };
+
+  /**
    * Facebookページの情報を取得
    * @returns
    */
@@ -110,34 +154,42 @@ export class InstagramService {
    * @param caption 投稿のキャプション文
    * @returns
    */
-  executePostingFeed = async (imagePath: string, caption: string) => {
+  executePostingFeed = async (
+    imagePath: string,
+    caption: string,
+  ): Promise<number> => {
+    // コンテナIDを取得
     const containerId = await this.getContainerId(imagePath, caption);
-    const updatedRequestOptions = {
-      ...this.requestOptions,
-      params: {
-        ...this.requestOptions.params,
-        creation_id: containerId,
-      },
-    };
-    const endpoint = `${process.env.INSTAGRAM_GRAPH_BASE_PATH}/${process.env.INSTAGRAM_ACCOUNT_ID_01}/media_publish`;
-    const res = await lastValueFrom(
-      this.httpService.post(endpoint, {}, updatedRequestOptions),
-    );
-    console.log(res.status, res.data);
-    return res.data;
+
+    // メディア投稿
+    const status: number = await this.postMedia(containerId);
+
+    return status;
   };
 
   /**
    * Instagaramにフィード投稿（写真　複数枚）
    * @returns
    */
-  executePostingCarousel = (mediaPathList: string[], caption: string) => {
+  executePostingCarousel = async (
+    mediaPathList: string[],
+    caption: string,
+  ): Promise<number> => {
+    // 写真・動画ごとにコンテナIDを取得
     const containerIdList = mediaPathList.map((path) => {
       return this.getItemContainerId(path);
     });
-    const childrenQueryString = containerIdList
-      .map((id) => `children=${id}`)
-      .join('&');
+
+    // カルーセルコンテナIDを取得
+    const carouselContainerId: string = await this.getCarouselContainerId(
+      await Promise.all(containerIdList),
+      caption,
+    );
+
+    // メディア投稿
+    const status: number = await this.postMedia(carouselContainerId);
+
+    return status;
   };
 
   /**
