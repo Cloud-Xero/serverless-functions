@@ -8,7 +8,9 @@ interface RequestOptions {
     access_token: string;
     fields?: string;
     image_url?: string;
+    video_url?: string;
     caption?: string;
+    media_type?: string;
   };
 }
 
@@ -27,17 +29,29 @@ export class InstagramService {
    * @returns コンテナID
    */
   private getContainerId = async (
-    imagePath: string,
+    path: string,
     caption: string,
+    mediaType?: 'REELS',
   ): Promise<string> => {
     const updatedRequestOptions = {
       ...this.requestOptions,
-      params: {
-        ...this.requestOptions.params,
-        image_url: imagePath,
-        caption,
-      },
     };
+
+    if (mediaType === 'REELS') {
+      updatedRequestOptions.params = {
+        ...this.requestOptions.params,
+        video_url: path,
+        media_type: mediaType,
+        caption,
+      };
+    } else {
+      updatedRequestOptions.params = {
+        ...this.requestOptions.params,
+        image_url: path,
+        caption,
+      };
+    }
+
     const endpoint = `${process.env.INSTAGRAM_GRAPH_BASE_PATH}/${process.env.INSTAGRAM_ACCOUNT_ID_01}/media`;
     const res: AxiosResponse = await lastValueFrom(
       this.httpService.post(endpoint, {}, updatedRequestOptions),
@@ -194,9 +208,27 @@ export class InstagramService {
 
   /**
    * Instagaramにリール動画を投稿
+   * @param videoPath 動画のURL
+   * @param caption 投稿のキャプション文
    * @returns
    */
-  executePostingReel = () => {};
+  executePostingReel = async (
+    videoPath: string,
+    caption: string,
+    mediaType: 'REELS',
+  ): Promise<number> => {
+    // コンテナIDを取得
+    const containerId = await this.getContainerId(
+      videoPath,
+      caption,
+      mediaType,
+    );
+
+    // メディア投稿
+    const status: number = await this.postMedia(containerId);
+
+    return status;
+  };
 
   /**
    * Instagaramにストーリーズを投稿
