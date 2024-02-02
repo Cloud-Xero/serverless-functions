@@ -17,7 +17,7 @@ export class InstagramController {
 
   @Post()
   executePostingFeed() {
-    return this.instagramService.executePostingFeed();
+    return this.instagramService.executePostingFeed(imagePath, caption);
   }
 
   @Post()
