@@ -1,5 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
+import { DatabaseInfo, RecordInfo } from './types';
+import { lastValueFrom } from 'rxjs';
 
 @Injectable()
 export class NotionService {
@@ -12,25 +14,37 @@ export class NotionService {
       'Content-Type': 'application/json',
     },
   };
-  getDatabaseInfo() {
-    const endpoint = `${process.env.NOTION_BASE_PATH}/databases/${process.env.NOTION_DATABASE_ID}`;
-    const res = this.httpService.get(endpoint, this.requestOptions);
-    console.log(res);
-  }
+  getDatabaseInfo = async () => {
+    try {
+      const endpoint = `${process.env.NOTION_BASE_PATH}/databases/${process.env.NOTION_DATABASE_ID}`;
+      const res = await lastValueFrom(
+        this.httpService.get(endpoint, this.requestOptions),
+      );
+      return res.data as DatabaseInfo;
+    } catch (error) {
+      throw new Error('Failed to get database information.');
+    }
+  };
 
-  getRecordInfo() {
-    const endpoint = `${process.env.NOTION_BASE_PATH}/databases/${process.env.NOTION_DATABASE_ID}/query`;
-    const payload = {
-      filter: {
-        property: 'Title',
-        rich_text: {
-          equals: 'Day1',
+  getRecordInfo = async () => {
+    try {
+      const endpoint = `${process.env.NOTION_BASE_PATH}/databases/${process.env.NOTION_DATABASE_ID}/query`;
+      const payload = {
+        filter: {
+          property: 'Title',
+          rich_text: {
+            equals: 'Day1',
+          },
         },
-      },
-    };
-    const res = this.httpService.post(endpoint, payload, this.requestOptions);
-    console.log(res);
-  }
+      };
+      const res = await lastValueFrom(
+        this.httpService.post(endpoint, payload, this.requestOptions),
+      );
+      return res.data as RecordInfo;
+    } catch (error) {
+      throw new Error('Failed to get record information.');
+    }
+  };
 }
 
 // https://api.notion.com/v1/databases/08e8a165a2c1424fb7f9d6e5224d2a1c
