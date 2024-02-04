@@ -131,6 +131,18 @@ export class InstagramService {
   };
 
   /**
+   * 改行を施したキャプション文の作成
+   * @param caption キャプション
+   * @param tags ハッシュタグ
+   * @returns 開業を施したキャプション文
+   */
+  private buildCaption = (caption: string, tags: string): string => {
+    return (
+      caption.replace(/\n/g, '<br>') + '<br><br>' + tags.replace(/\n/g, '<br>')
+    );
+  };
+
+  /**
    * Facebookページの情報を取得
    * @returns
    */
@@ -169,15 +181,13 @@ export class InstagramService {
    * @returns
    */
   executePostingFeed = async (record: PageObjectResponse): Promise<number> => {
-    const info = record.properties;
-
-    const tags: string = info.Tags['rich_text'].name;
-    const caption: string = info.Caption['rich_text'].name;
-    const imagePath: string = info.Thumbnail['files'][0].file.url;
+    const imagePath: string = record.properties.Thumbnail['files'][0].file.url;
 
     // キャプションの加工（改行＆ハッシュタグの追加）
-    const explanation =
-      caption.replace(/\n/g, '<br>') + '<br><br>' + tags.replace(/\n/g, '<br>');
+    const explanation = this.buildCaption(
+      record.properties.Caption['rich_text'].name,
+      record.properties.Tags['rich_text'].name,
+    );
 
     // コンテナIDを取得
     const containerId = await this.getContainerId(imagePath, explanation);
