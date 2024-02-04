@@ -1,5 +1,6 @@
 import { HttpService } from '@nestjs/axios';
 import { Inject, Injectable } from '@nestjs/common';
+import { PageObjectResponse } from '@notionhq/client/build/src/api-endpoints';
 import { AxiosResponse } from 'axios';
 import { lastValueFrom } from 'rxjs';
 
@@ -164,16 +165,22 @@ export class InstagramService {
 
   /**
    * Instagaramにフィード投稿（写真１枚）
-   * @param imagePath 画像のURL
-   * @param caption 投稿のキャプション文
+   * @param record レコード情報
    * @returns
    */
-  executePostingFeed = async (
-    imagePath: string,
-    caption: string,
-  ): Promise<number> => {
+  executePostingFeed = async (record: PageObjectResponse): Promise<number> => {
+    const info = record.properties;
+
+    const tags: string = info.Tags['rich_text'].name;
+    const caption: string = info.Caption['rich_text'].name;
+    const imagePath: string = info.Thumbnail['files'][0].file.url;
+
+    // キャプションの加工（改行＆ハッシュタグの追加）
+    const explanation =
+      caption.replace(/\n/g, '<br>') + '<br><br>' + tags.replace(/\n/g, '<br>');
+
     // コンテナIDを取得
-    const containerId = await this.getContainerId(imagePath, caption);
+    const containerId = await this.getContainerId(imagePath, explanation);
 
     // メディア投稿
     const status: number = await this.postMedia(containerId);
