@@ -236,20 +236,20 @@ export class InstagramService {
   /**
    * Instagaramにリール動画を投稿
    * @param videoPath 動画のURL
-   * @param caption 投稿のキャプション文
+   * @param record レコード情報
    * @returns
    */
-  executePostingReel = async (
-    videoPath: string,
-    caption: string,
-    mediaType: 'REELS',
-  ): Promise<number> => {
-    // コンテナIDを取得
-    const containerId = await this.getContainerId(
-      videoPath,
-      caption,
-      mediaType,
+  executePostingReel = async (record: PageObjectResponse): Promise<number> => {
+    // キャプションの加工（改行＆ハッシュタグの追加）
+    const explanation = this.buildCaption(
+      record.properties.Caption['rich_text'].name,
+      record.properties.Tags['rich_text'].name,
     );
+
+    const videoPath: string = record.properties.Thumbnail['files'][0].file.url;
+
+    // コンテナIDを取得
+    const containerId = await this.getContainerId(videoPath, explanation);
 
     // メディア投稿
     const status: number = await this.postMedia(containerId);
