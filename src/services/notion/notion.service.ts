@@ -1,50 +1,117 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { HttpService } from '@nestjs/axios';
-import { DatabaseInfo, RecordInfo } from './types';
-import { lastValueFrom } from 'rxjs';
+import { Injectable } from '@nestjs/common';
+// import { HttpService } from '@nestjs/axios';
+// import { DatabaseInfo } from './types';
+// import { lastValueFrom } from 'rxjs';
+import { Client } from '@notionhq/client';
+import { QueryDatabaseResponse } from '@notionhq/client/build/src/api-endpoints';
 
 @Injectable()
 export class NotionService {
-  @Inject()
-  private httpService: HttpService;
-  private requestOptions = {
-    headers: {
-      Authorization: `Bearer ${process.env.NOTION_TOKEN}`,
-      'Notion-Version': process.env.NOTION_API_VERSION,
-      'Content-Type': 'application/json',
-    },
-  };
-  getDatabaseInfo = async () => {
+  // private httpService: HttpService;
+  // private requestOptions = {
+  //   headers: {
+  //     Authorization: `Bearer ${process.env.NOTION_TOKEN}`,
+  //     'Notion-Version': process.env.NOTION_API_VERSION,
+  //     'Content-Type': 'application/json',
+  //   },
+  // };
+  // getDatabaseInfo = async () => {
+  //   try {
+  //     const endpoint = `${process.env.NOTION_BASE_PATH}/databases/${process.env.NOTION_DATABASE_ID}`;
+
+  //     const res = await lastValueFrom(
+  //       this.httpService.get(endpoint, this.requestOptions),
+  //     );
+  //     return res.data as DatabaseInfo;
+  //   } catch (error) {
+  //     throw new Error('Failed to get database information.');
+  //   }
+  // };
+
+  // getRecordInfo = async () => {
+  //   try {
+  //     const endpoint = `${process.env.NOTION_BASE_PATH}/databases/${process.env.NOTION_DATABASE_ID}/query`;
+  //     const payload = {
+  //       filter: {
+  //         property: 'Status',
+  //         status: {
+  //           equals: 'Publish',
+  //         },
+  //       },
+  //     };
+  //     const res = await lastValueFrom(
+  //       this.httpService.post(endpoint, payload, this.requestOptions),
+  //     );
+  //     return res.data as RecordInfo;
+  //   } catch (error) {
+  //     throw new Error('Failed to get record information.');
+  //   }
+  // };
+
+  // updateRecordStatus = async () => {
+  //   try {
+  //     const endpoint = `${process.env.NOTION_BASE_PATH}/databases/${process.env.NOTION_DATABASE_ID}/`;
+  //     const payload = {
+  //       properties: {
+  //         status: 'Published',
+  //       },
+  //     };
+  //     const res = await lastValueFrom(
+  //       this.httpService.patch(endpoint, payload, this.requestOptions),
+  //     );
+  //     return res.data as
+  //   } catch (error) {}
+  // };
+
+  private notion = new Client({
+    auth: process.env.NOTION_TOKEN,
+  });
+  private databaseId = process.env.NOTION_DATABASE_ID;
+
+  /**
+   * 投稿するレコードのページ情報を取得
+   * @returns
+   */
+  getPageIdsWithStatusPublish = async (): Promise<QueryDatabaseResponse> => {
     try {
-      const endpoint = `${process.env.NOTION_BASE_PATH}/databases/${process.env.NOTION_DATABASE_ID}`;
-      const res = await lastValueFrom(
-        this.httpService.get(endpoint, this.requestOptions),
-      );
-      return res.data as DatabaseInfo;
+      const response = await this.notion.databases.query({
+        database_id: this.databaseId,
+        filter: {
+          property: 'Status',
+          status: {
+            equals: 'Publish',
+          },
+        },
+      });
+      return response;
     } catch (error) {
-      throw new Error('Failed to get database information.');
+      throw new Error('Failed to get the record ');
     }
   };
 
-  getRecordInfo = async () => {
+  /**
+   * ステータスを Published もしくは Publish failure に変更
+   * @param pageId
+   * @returns
+   */
+  updateRecordStatus = async (
+    pageId: string,
+    newStatus: string,
+  ): Promise<void> => {
     try {
-      const endpoint = `${process.env.NOTION_BASE_PATH}/databases/${process.env.NOTION_DATABASE_ID}/query`;
-      const payload = {
-        filter: {
-          property: 'Title',
-          rich_text: {
-            equals: 'Day1',
+      await this.notion.pages.update({
+        page_id: pageId,
+        properties: {
+          Status: {
+            status: {
+              name: newStatus,
+            },
           },
         },
-      };
-      const res = await lastValueFrom(
-        this.httpService.post(endpoint, payload, this.requestOptions),
-      );
-      return res.data as RecordInfo;
+      });
+      console.log(`Page ${pageId} status updated to completed.`);
     } catch (error) {
-      throw new Error('Failed to get record information.');
+      throw new Error(error.body);
     }
   };
 }
-
-// https://api.notion.com/v1/databases/08e8a165a2c1424fb7f9d6e5224d2a1c
