@@ -200,21 +200,31 @@ export class InstagramService {
 
   /**
    * Instagaramにフィード投稿（写真　複数枚）
+   * @param record レコード情報
    * @returns
    */
   executePostingCarousel = async (
-    mediaPathList: string[],
-    caption: string,
+    record: PageObjectResponse,
   ): Promise<number> => {
+    const thumbnailObjectList = record.properties.Thumbnail['files'];
+    const mediaPathList: string[] = thumbnailObjectList.map(
+      (thumbnailObject) => thumbnailObject.file.url,
+    );
     // 写真・動画ごとにコンテナIDを取得
     const containerIdList = mediaPathList.map((path) => {
       return this.getItemContainerId(path);
     });
 
+    // キャプションの加工（改行＆ハッシュタグの追加）
+    const explanation = this.buildCaption(
+      record.properties.Caption['rich_text'].name,
+      record.properties.Tags['rich_text'].name,
+    );
+
     // カルーセルコンテナIDを取得
     const carouselContainerId: string = await this.getCarouselContainerId(
       await Promise.all(containerIdList),
-      caption,
+      explanation,
     );
 
     // メディア投稿
