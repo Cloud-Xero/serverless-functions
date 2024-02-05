@@ -1,5 +1,5 @@
 import { HttpService } from '@nestjs/axios';
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PageObjectResponse } from '@notionhq/client/build/src/api-endpoints';
 import { AxiosResponse } from 'axios';
 import { lastValueFrom } from 'rxjs';
@@ -17,7 +17,6 @@ interface RequestOptions {
 
 @Injectable()
 export class InstagramService {
-  @Inject()
   private httpService: HttpService;
   private requestOptions: RequestOptions = {
     params: {
