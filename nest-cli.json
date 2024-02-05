@@ -11,6 +11,16 @@
         "tsConfigPath": "tsconfig.json",
         "deleteOutDir": true
       }
+    },
+    "autoPost": {
+      "type": "application",
+      "root": "src/autoPost",
+      "entryFile": "main",
+      "sourceRoot": "src/autoPost",
+      "compilerOptions": {
+        "tsConfigPath": "tsconfig.json",
+        "deleteOutDir": true
+      }
     }
   }
 }
