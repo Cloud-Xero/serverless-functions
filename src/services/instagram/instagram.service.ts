@@ -17,7 +17,8 @@ interface RequestOptions {
 
 @Injectable()
 export class InstagramService {
-  private httpService: HttpService;
+  // private httpService: HttpService;
+  constructor(private httpService: HttpService) {}
   private requestOptions: RequestOptions = {
     params: {
       access_token: process.env.META_ACCESS_TOKEN,
@@ -71,10 +72,10 @@ export class InstagramService {
       ...this.requestOptions,
       params: {
         ...this.requestOptions.params,
-        is_carousel_item: true,
+        is_carousel_item: 'true',
         image_url: mediaPath,
-        video_path: mediaPath,
-        media_type: 'VIDEO',
+        // video_path: mediaPath,  // video only
+        // media_type: 'VIDEO',  // video only
       },
     };
     const endpoint = `${process.env.INSTAGRAM_GRAPH_BASE_PATH}/${process.env.INSTAGRAM_ACCOUNT_ID_01}/media`;
@@ -210,19 +211,22 @@ export class InstagramService {
       (thumbnailObject) => thumbnailObject.file.url,
     );
     // 写真・動画ごとにコンテナIDを取得
-    const containerIdList = mediaPathList.map((path) => {
-      return this.getItemContainerId(path);
+    const containerIdList = await Promise.all(
+      mediaPathList.map((path) => {
+        return this.getItemContainerId(path);
     });
 
     // キャプションの加工（改行＆ハッシュタグの追加）
     const explanation = this.buildCaption(
-      record.properties.Caption['rich_text'].name,
-      record.properties.Tags['rich_text'].name,
+      record.properties.Caption['rich_text'][0].text.content,
+      record.properties.Tags['rich_text'][0].text.content,
     );
 
+
+    // ここで落ちている
     // カルーセルコンテナIDを取得
     const carouselContainerId: string = await this.getCarouselContainerId(
-      await Promise.all(containerIdList),
+      containerIdList,
       explanation,
     );
 
