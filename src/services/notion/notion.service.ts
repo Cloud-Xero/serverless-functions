@@ -97,7 +97,7 @@ export class NotionService {
   updateRecordStatus = async (
     pageId: string,
     newStatus: string,
-  ): Promise<void> => {
+  ): Promise<string | void> => {
     try {
       await this.notion.pages.update({
         page_id: pageId,
@@ -109,7 +109,7 @@ export class NotionService {
           },
         },
       });
-      console.log(`Page ${pageId} status updated to completed.`);
+      return `Page ${pageId} status updated to completed.`;
     } catch (error) {
       throw new Error(error.body);
     }
