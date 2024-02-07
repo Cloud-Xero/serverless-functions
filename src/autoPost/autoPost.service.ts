@@ -31,25 +31,25 @@ export class AutoPostService {
     const promises = records.results.map(async (record: PageObjectResponse) => {
       const pageId = record.id;
       // Status 列が select プロパティでない
-      if (record.properties.Status.type !== 'select') {
+      if (record.properties.Status.type !== 'status') {
         return {
           pageId,
           status: 500,
-          message: 'Status列をselectプロパティに修正してください。',
+          message: 'Status列をstatusプロパティに修正してください。',
         };
       }
       // Status 列が未入力
-      if (!record.properties.Status.select) {
+      if (!record.properties.Status.status.name) {
         return {
           pageId,
           status: 500,
-          message: 'Status列が未入力です。',
+          message: 'Status列が未選択です。',
         };
       }
 
       let status: number;
 
-      switch (record.properties.Status.select.name) {
+      switch (record.properties.Type['select'].name) {
         case 'Feed':
           status = await this.instagramService.executePostingFeed(record);
           break;
@@ -70,8 +70,7 @@ export class AutoPostService {
         default:
           break;
       }
-
-      const title = record.properties.Title['title'].plain_text;
+      const title = record.properties.Title['title'][0].text.content;
       return {
         pageId,
         status,
@@ -92,7 +91,7 @@ export class AutoPostService {
   updateStatusAfterPost = async (
     pageId: string,
     newStatus: string,
-  ): Promise<void> => {
-    await this.notionService.updateRecordStatus(pageId, newStatus);
+  ): Promise<string | void> => {
+    return await this.notionService.updateRecordStatus(pageId, newStatus);
   };
 }
