@@ -61,26 +61,24 @@ export class InstagramService {
     return res.data.id as string;
   };
 
-  /**
+  /**【成功】
    * カルーセル用のアイテムコンテナIDを取得
    * @param mediaPath メディアのURL
    * @returns アイテムコンテナID
    */
   private getItemContainerId = async (mediaPath: string) => {
     // TODO: 画像か動画化の判断が必要
-    const updatedRequestOptions = {
-      ...this.requestOptions,
-      params: {
-        ...this.requestOptions.params,
-        is_carousel_item: 'true',
-        image_url: mediaPath,
-        // video_path: mediaPath,  // video only
-        // media_type: 'VIDEO',  // video only
-      },
+    const requestBody = {
+      is_carousel_item: 'true',
+      image_url: mediaPath,
+      // video_path: mediaPath,  // video only
+      // media_type: 'VIDEO',  // video only
     };
-    const endpoint = `${process.env.INSTAGRAM_GRAPH_BASE_PATH}/${process.env.INSTAGRAM_ACCOUNT_ID_01}/media`;
+
+    const endpoint = `${process.env.INSTAGRAM_GRAPH_BASE_PATH}/${process.env.INSTAGRAM_ACCOUNT_ID_01}/media?access_token=${process.env.META_ACCESS_TOKEN}`;
+
     const res: AxiosResponse = await lastValueFrom(
-      this.httpService.post(endpoint, {}, updatedRequestOptions),
+      this.httpService.post(endpoint, requestBody),
     );
     console.log('res.data.id', res.data.id);
     return res.data.id as string;
@@ -206,6 +204,8 @@ export class InstagramService {
   executePostingCarousel = async (
     record: PageObjectResponse,
   ): Promise<number> => {
+    console.log('--image--');
+    console.log(record.properties.Thumbnail['files']);
     const thumbnailObjectList = record.properties.Thumbnail['files'];
     const mediaPathList: string[] = thumbnailObjectList.map(
       (thumbnailObject) => thumbnailObject.file.url,
@@ -214,7 +214,13 @@ export class InstagramService {
     const containerIdList = await Promise.all(
       mediaPathList.map((path) => {
         return this.getItemContainerId(path);
-    });
+      }),
+    );
+    console.log('--containerIdList--');
+    console.log(containerIdList);
+
+    console.log('--caption--');
+    console.log(record.properties.Caption['rich_text']);
 
     // キャプションの加工（改行＆ハッシュタグの追加）
     const explanation = this.buildCaption(
@@ -222,6 +228,7 @@ export class InstagramService {
       record.properties.Tags['rich_text'][0].text.content,
     );
 
+    console.log('explanation', explanation);
 
     // ここで落ちている
     // カルーセルコンテナIDを取得
@@ -229,6 +236,8 @@ export class InstagramService {
       containerIdList,
       explanation,
     );
+
+    console.log('carouselContainerId', carouselContainerId);
 
     // メディア投稿
     const status: number = await this.postMedia(carouselContainerId);
