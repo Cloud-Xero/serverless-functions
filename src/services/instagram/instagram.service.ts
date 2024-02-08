@@ -186,8 +186,8 @@ export class InstagramService {
 
     // キャプションの加工（改行＆ハッシュタグの追加）
     const explanation = this.buildCaption(
-      record.properties.Caption['rich_text'].name,
-      record.properties.Tags['rich_text'].name,
+      record.properties.Caption['rich_text'][0].text.content,
+      record.properties.Tags['rich_text'][0].text.content,
     );
 
     // コンテナIDを取得
@@ -243,8 +243,8 @@ export class InstagramService {
   executePostingReel = async (record: PageObjectResponse): Promise<number> => {
     // キャプションの加工（改行＆ハッシュタグの追加）
     const explanation = this.buildCaption(
-      record.properties.Caption['rich_text'].name,
-      record.properties.Tags['rich_text'].name,
+      record.properties.Caption['rich_text'][0].text.content,
+      record.properties.Tags['rich_text'][0].text.content,
     );
 
     const videoPath: string = record.properties.Thumbnail['files'][0].file.url;
