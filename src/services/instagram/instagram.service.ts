@@ -61,19 +61,51 @@ export class InstagramService {
     return res.data.id as string;
   };
 
+  /**
+   * 画像か動画かで使用するプロパティが異なる
+   * @param mediaPath
+   * @returns
+   */
+  private getMediaParams = (mediaPath: string) => {
+    const path = new URL(mediaPath);
+    const pathname = path.pathname;
+    const extension = pathname.split('.').pop();
+
+    console.log('extension:', extension);
+
+    // 画像の場合
+    if (['jpeg', 'jpg'].includes(extension)) {
+      return {
+        image_url: mediaPath,
+      };
+    }
+
+    // 動画の場合
+    if (['mov', 'mp4'].includes(extension)) {
+      return {
+        video_url: mediaPath,
+        media_type: 'VIDEO',
+      };
+    }
+
+    throw new Error(`拡張子「${extension}」は投稿できないファイルです。`);
+  };
+
   /**【成功】
    * カルーセル用のアイテムコンテナIDを取得
    * @param mediaPath メディアのURL
    * @returns アイテムコンテナID
    */
   private getItemContainerId = async (mediaPath: string) => {
+    const mediaParams = this.getMediaParams(mediaPath);
     // TODO: 画像か動画化の判断が必要
     const requestBody = {
       is_carousel_item: 'true',
-      image_url: mediaPath,
-      // video_path: mediaPath,  // video only
-      // media_type: 'VIDEO',  // video only
+      ...mediaParams,
     };
+
+    console.log('--requestBody--');
+    console.log(requestBody);
 
     const endpoint = `${process.env.INSTAGRAM_GRAPH_BASE_PATH}/${process.env.INSTAGRAM_ACCOUNT_ID_01}/media?access_token=${process.env.META_ACCESS_TOKEN}`;
 
@@ -211,6 +243,7 @@ export class InstagramService {
     const mediaPathList: string[] = thumbnailObjectList.map(
       (thumbnailObject) => thumbnailObject.file.url,
     );
+
     // 写真・動画ごとにコンテナIDを取得
     const containerIdList = await Promise.all(
       mediaPathList.map((path) => {
