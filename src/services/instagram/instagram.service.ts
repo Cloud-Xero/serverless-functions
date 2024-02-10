@@ -130,7 +130,7 @@ export class InstagramService {
     const mediaQueryString = 'media_type=CAROUSEL';
     // const childrenQueryString = idList.map((id) => `children=${id}`).join('&');
     const childrenQueryString = `children=${encodeURIComponent(idList.join(','))}`;
-    const tokenQueryString = `access_token=${this.requestOptions.params.access_token}`;
+    const tokenQueryString = `access_token=${process.env.META_ACCESS_TOKEN}`;
     const endpoint = `${process.env.INSTAGRAM_GRAPH_BASE_PATH}/${process.env.INSTAGRAM_ACCOUNT_ID_01}/media?${captionQueryString}&${mediaQueryString}&${childrenQueryString}&${tokenQueryString}`;
 
     console.log('--endpoint2--');
