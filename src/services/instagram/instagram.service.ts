@@ -34,34 +34,34 @@ export class InstagramService {
     caption: string,
     mediaType?: 'REELS',
   ): Promise<string> => {
-    const updatedRequestOptions = {
-      ...this.requestOptions,
-    };
+    let requestBody = {};
 
+    // TODO:オブジェクトではなく、文字列にする（エンコードされたまま投稿されてしまうため）
     if (mediaType === 'REELS') {
-      updatedRequestOptions.params = {
-        ...this.requestOptions.params,
+      requestBody = {
         video_url: path,
         media_type: mediaType,
         caption,
+        share_to_feed: false,
       };
     } else {
-      updatedRequestOptions.params = {
-        ...this.requestOptions.params,
+      requestBody = {
         image_url: path,
         caption,
       };
     }
 
-    const endpoint = `${process.env.INSTAGRAM_GRAPH_BASE_PATH}/${process.env.INSTAGRAM_ACCOUNT_ID_01}/media`;
+    console.log('requestBody', requestBody);
+
+    const endpoint = `${process.env.INSTAGRAM_GRAPH_BASE_PATH}/${process.env.INSTAGRAM_ACCOUNT_ID_01}/media?access_token=${process.env.META_ACCESS_TOKEN}`;
     const res: AxiosResponse = await lastValueFrom(
-      this.httpService.post(endpoint, {}, updatedRequestOptions),
+      this.httpService.post(endpoint, requestBody),
     );
     console.log('res.data.id', res.data.id);
     return res.data.id as string;
   };
 
-  /**
+  /**【成功】
    * 画像か動画かで使用するプロパティが異なる
    * @param mediaPath
    * @returns
@@ -133,38 +133,41 @@ export class InstagramService {
     const tokenQueryString = `access_token=${process.env.META_ACCESS_TOKEN}`;
     const endpoint = `${process.env.INSTAGRAM_GRAPH_BASE_PATH}/${process.env.INSTAGRAM_ACCOUNT_ID_01}/media?${captionQueryString}&${mediaQueryString}&${childrenQueryString}&${tokenQueryString}`;
 
-    console.log('--endpoint2--');
-    console.log(endpoint);
-
     const res: AxiosResponse = await lastValueFrom(
       this.httpService.post(endpoint),
     );
-    console.log('res.data.id', res.data.id);
     return res.data.id;
   };
 
-  /**
+  /**【成功】
+   * 処理の待機
+   * @param delay
+   * @returns
+   */
+  private waitForProcessing = (delay: number): Promise<void> => {
+    return new Promise((resolve) => setTimeout(resolve, delay));
+  };
+
+  /**【成功】
    * メディアの投稿
    * @param creationId
    * @returns ステータスID
    */
   private postMedia = async (creationId: string): Promise<number> => {
-    const updatedRequestOptions = {
-      ...this.requestOptions,
-      params: {
-        ...this.requestOptions.params,
-        creation_id: creationId,
-      },
-    };
-    const endpoint = `${process.env.INSTAGRAM_GRAPH_BASE_PATH}/${process.env.INSTAGRAM_ACCOUNT_ID_01}/media_publish`;
-    const res = await lastValueFrom(
-      this.httpService.post(endpoint, {}, updatedRequestOptions),
-    );
+    const endpoint = `${process.env.INSTAGRAM_GRAPH_BASE_PATH}/${process.env.INSTAGRAM_ACCOUNT_ID_01}/media_publish?creation_id=${creationId}&access_token=${process.env.META_ACCESS_TOKEN}`;
 
-    return res.status;
+    // TODO: 時間指定で投稿できるようにする
+    try {
+      console.log('Waiting for media processing...');
+      await this.waitForProcessing(10000);
+      const res = await lastValueFrom(this.httpService.post(endpoint));
+      return res.status;
+    } catch (error) {
+      console.error('Error:', error.response.data);
+    }
   };
 
-  /**
+  /**【成功】
    * 改行を施したキャプション文の作成
    * @param caption キャプション
    * @param tags ハッシュタグ
@@ -172,7 +175,6 @@ export class InstagramService {
    */
   private buildCaption = (caption: string, tags: string): string => {
     return encodeURIComponent(caption + '\n\n' + tags);
-    // caption.replace(/\n/g, '<br>') + '<br><br>' + tags.replace(/\n/g, '<br>')
   };
 
   /**
@@ -209,7 +211,7 @@ export class InstagramService {
   };
 
   /**
-   * Instagaramにフィード投稿（写真１枚）
+   * Instagramにフィード投稿（写真１枚）
    * @param record レコード情報
    * @returns
    */
@@ -217,7 +219,7 @@ export class InstagramService {
     const imagePath: string = record.properties.Thumbnail['files'][0].file.url;
 
     // キャプションの加工（改行＆ハッシュタグの追加）
-    const explanation = this.buildCaption(
+    const explanation = await this.buildCaption(
       record.properties.Caption['rich_text'][0].text.content,
       record.properties.Tags['rich_text'][0].text.content,
     );
@@ -225,14 +227,13 @@ export class InstagramService {
     // コンテナIDを取得
     const containerId = await this.getContainerId(imagePath, explanation);
 
+    // TODO: try-catchを使用する
     // メディア投稿
-    const status: number = await this.postMedia(containerId);
-
-    return status;
+    return await this.postMedia(containerId);
   };
 
   /**【成功】
-   * Instagaramにフィード投稿（写真　複数枚）
+   * Instagramにフィード投稿（写真　複数枚）
    * @param record レコード情報
    * @returns
    */
@@ -252,7 +253,7 @@ export class InstagramService {
     );
 
     // キャプションの加工（改行＆ハッシュタグの追加）
-    const explanation = this.buildCaption(
+    const explanation = await this.buildCaption(
       record.properties.Caption['rich_text'][0].text.content,
       record.properties.Tags['rich_text'][0].text.content,
     );
@@ -263,32 +264,37 @@ export class InstagramService {
       explanation,
     );
 
-    // メディア投稿（TODO: try-catch）
+    // TODO: try-catchを使用する
+    // メディア投稿
     return await this.postMedia(carouselContainerId);
   };
 
-  /**
-   * Instagaramにリール動画を投稿
-   * @param videoPath 動画のURL
+  /**【成功】
+   * Instagramにリール動画を投稿
+   * @param videoPath 動画のURL（動画はCanvaで制作すること）
    * @param record レコード情報
    * @returns
    */
   executePostingReel = async (record: PageObjectResponse): Promise<number> => {
     // キャプションの加工（改行＆ハッシュタグの追加）
-    const explanation = this.buildCaption(
+    const explanation = await this.buildCaption(
       record.properties.Caption['rich_text'][0].text.content,
       record.properties.Tags['rich_text'][0].text.content,
     );
 
     const videoPath: string = record.properties.Thumbnail['files'][0].file.url;
 
+    // TODO: カバー画像を指定できるようにする
     // コンテナIDを取得
-    const containerId = await this.getContainerId(videoPath, explanation);
+    const containerId = await this.getContainerId(
+      videoPath,
+      explanation,
+      'REELS',
+    );
 
+    // TODO: try-catchを使用する
     // メディア投稿
-    const status: number = await this.postMedia(containerId);
-
-    return status;
+    return await this.postMedia(containerId);
   };
 
   /**

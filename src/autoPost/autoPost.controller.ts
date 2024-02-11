@@ -30,6 +30,8 @@ export class AutoPostController {
         return result.message;
       }
     });
+
+    // TODO: サーバへの接続を切断する処理の追加
     return Promise.all(promises);
   }
 }

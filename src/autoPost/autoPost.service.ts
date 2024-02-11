@@ -51,14 +51,17 @@ export class AutoPostService {
 
       switch (record.properties.Type['select'].name) {
         case 'Feed':
+          console.log('Feed');
           status = await this.instagramService.executePostingFeed(record);
           break;
 
         case 'Carousel':
+          console.log('Carousel');
           status = await this.instagramService.executePostingCarousel(record);
           break;
 
         case 'Reels':
+          console.log('Reels');
           status = await this.instagramService.executePostingReel(record);
           break;
 
