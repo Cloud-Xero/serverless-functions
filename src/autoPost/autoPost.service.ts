@@ -58,7 +58,7 @@ export class AutoPostService {
           status = await this.instagramService.executePostingCarousel(record);
           break;
 
-        case 'Reel':
+        case 'Reels':
           status = await this.instagramService.executePostingReel(record);
           break;
 
