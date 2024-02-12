@@ -161,13 +161,16 @@ export class InstagramService {
    * @param creationId
    * @returns ステータスID
    */
-  private postMedia = async (creationId: string): Promise<number> => {
+  private postMedia = async (
+    creationId: string,
+    delay = 3000,
+  ): Promise<number> => {
     const endpoint = `${process.env.INSTAGRAM_GRAPH_BASE_PATH}/${process.env.INSTAGRAM_ACCOUNT_ID_01}/media_publish?creation_id=${creationId}&access_token=${process.env.META_ACCESS_TOKEN}`;
 
     // TODO: 時間指定で投稿できるようにする
     try {
       console.log('Waiting for media processing...');
-      await this.waitForProcessing(10000);
+      await this.waitForProcessing(delay);
       const res = await lastValueFrom(this.httpService.post(endpoint));
       return res.status;
     } catch (error) {
@@ -314,7 +317,7 @@ export class InstagramService {
 
     try {
       // メディア投稿
-      const status = await this.postMedia(containerId);
+      const status = await this.postMedia(containerId, 10000);
       return status;
     } catch (error) {
       console.error('リール動画の投稿に失敗しました :', error.response.data);
