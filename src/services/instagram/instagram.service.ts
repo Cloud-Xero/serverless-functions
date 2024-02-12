@@ -17,8 +17,9 @@ interface RequestOptions {
 
 @Injectable()
 export class InstagramService {
-  // private httpService: HttpService;
   constructor(private httpService: HttpService) {}
+
+  // アクセストークン
   private requestOptions: RequestOptions = {
     params: {
       access_token: process.env.META_ACCESS_TOKEN,
@@ -34,28 +35,30 @@ export class InstagramService {
     caption: string,
     mediaType?: 'REELS',
   ): Promise<string> => {
-    let requestBody = {};
+    let params = {};
 
     // TODO:オブジェクトではなく、文字列にする（エンコードされたまま投稿されてしまうため）
     if (mediaType === 'REELS') {
-      requestBody = {
+      params = {
+        ...this.requestOptions.params,
         video_url: path,
         media_type: mediaType,
         caption,
         share_to_feed: false,
       };
     } else {
-      requestBody = {
+      params = {
+        ...this.requestOptions.params,
         image_url: path,
         caption,
       };
     }
 
-    console.log('requestBody', requestBody);
+    console.log('params', params);
 
-    const endpoint = `${process.env.INSTAGRAM_GRAPH_BASE_PATH}/${process.env.INSTAGRAM_ACCOUNT_ID_01}/media?access_token=${process.env.META_ACCESS_TOKEN}`;
+    const endpoint = `${process.env.INSTAGRAM_GRAPH_BASE_PATH}/${process.env.INSTAGRAM_ACCOUNT_ID_01}/media`;
     const res: AxiosResponse = await lastValueFrom(
-      this.httpService.post(endpoint, requestBody),
+      this.httpService.post(endpoint, {}, { params }),
     );
     console.log('res.data.id', res.data.id);
     return res.data.id as string;
@@ -171,10 +174,11 @@ export class InstagramService {
    * 改行を施したキャプション文の作成
    * @param caption キャプション
    * @param tags ハッシュタグ
-   * @returns エンコードしたキャプション文
+   * @returns 投稿するキャプション文
    */
   private buildCaption = (caption: string, tags: string): string => {
-    return encodeURIComponent(caption + '\n\n' + tags);
+    // return encodeURIComponent(caption + '\n\n' + tags);
+    return caption + '\n\n' + tags; // エンコードする必要なかった
   };
 
   /**
