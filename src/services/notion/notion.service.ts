@@ -89,6 +89,13 @@ export class NotionService {
     }
   };
 
+  // 現在日時を取得
+  private getDatetime = () => {
+    // 現在の日時を日本時間で取得し、ISO 8601形式に変換
+    const now = new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' });
+    return new Date(now).toISOString();
+  };
+
   /**
    * ステータスを Published もしくは Publish failure に変更
    * @param pageId
@@ -105,6 +112,11 @@ export class NotionService {
           Status: {
             status: {
               name: newStatus,
+            },
+          },
+          'Posted Date': {
+            date: {
+              start: newStatus === 'Published' ? this.getDatetime() : '', // 成功時は現在日時を設定
             },
           },
         },
