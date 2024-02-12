@@ -26,6 +26,10 @@ export class InstagramService {
     },
   };
 
+  private ENDPOINT_MAP = {
+    MEDIA: `${process.env.INSTAGRAM_GRAPH_BASE_PATH}/${process.env.INSTAGRAM_ACCOUNT_ID_01}/media`,
+  };
+
   /**
    * 画像URLとキャプションからコンテナIDを取得
    * @returns コンテナID
@@ -58,7 +62,7 @@ export class InstagramService {
     console.log('params', params);
 
     try {
-      const endpoint = `${process.env.INSTAGRAM_GRAPH_BASE_PATH}/${process.env.INSTAGRAM_ACCOUNT_ID_01}/media`;
+      const endpoint = this.ENDPOINT_MAP.MEDIA;
       const res: AxiosResponse = await lastValueFrom(
         this.httpService.post(endpoint, {}, { params }),
       );
@@ -99,32 +103,33 @@ export class InstagramService {
     throw new Error(`拡張子「${extension}」は投稿できないファイルです。`);
   };
 
-  /**【成功】
+  /**
    * カルーセル用のアイテムコンテナIDを取得
    * @param mediaPath メディアのURL
    * @returns アイテムコンテナID
    */
   private getItemContainerId = async (mediaPath: string) => {
     const mediaParams = this.getMediaParams(mediaPath);
-    // TODO: 画像か動画化の判断が必要
-    const requestBody = {
-      is_carousel_item: 'true',
-      ...mediaParams,
+    // TODO: 画像か動画かの判断が必要
+    const params = {
+      ...this.requestOptions.params,
     };
 
-    console.log('--requestBody--');
-    console.log(requestBody);
+    const requestBody = {
+      ...mediaParams,
+      is_carousel_item: 'true',
+    };
 
-    const endpoint = `${process.env.INSTAGRAM_GRAPH_BASE_PATH}/${process.env.INSTAGRAM_ACCOUNT_ID_01}/media?access_token=${process.env.META_ACCESS_TOKEN}`;
+    const endpoint = this.ENDPOINT_MAP.MEDIA;
 
     const res: AxiosResponse = await lastValueFrom(
-      this.httpService.post(endpoint, requestBody),
+      this.httpService.post(endpoint, requestBody, { params }),
     );
-    console.log('res.data.id', res.data.id);
+    console.log('carousel item container ID', res.data.id);
     return res.data.id as string;
   };
 
-  /**【成功】
+  /**
    * カルーセルコンテナIDを取得
    * @param idList
    * @param caption
@@ -134,20 +139,27 @@ export class InstagramService {
     idList: string[],
     caption: string,
   ) => {
-    const captionQueryString = `caption=${caption}`;
-    const mediaQueryString = 'media_type=CAROUSEL';
-    // const childrenQueryString = idList.map((id) => `children=${id}`).join('&');
-    const childrenQueryString = `children=${encodeURIComponent(idList.join(','))}`;
-    const tokenQueryString = `access_token=${process.env.META_ACCESS_TOKEN}`;
-    const endpoint = `${process.env.INSTAGRAM_GRAPH_BASE_PATH}/${process.env.INSTAGRAM_ACCOUNT_ID_01}/media?${captionQueryString}&${mediaQueryString}&${childrenQueryString}&${tokenQueryString}`;
+    const params = {
+      ...this.requestOptions.params,
+    };
+
+    const requestBody = {
+      caption,
+      media_type: 'CAROUSEL',
+    };
+
+    // childrenは先にパスに含めないとエラーになる
+    const endpoint = `${this.ENDPOINT_MAP.MEDIA}?children=${encodeURIComponent(idList.join(','))}`;
 
     const res: AxiosResponse = await lastValueFrom(
-      this.httpService.post(endpoint),
+      this.httpService.post(endpoint, requestBody, { params }),
     );
+    console.log('carousel container ID', res.data.id);
+
     return res.data.id;
   };
 
-  /**【成功】
+  /**
    * 処理の待機
    * @param delay
    * @returns
@@ -187,39 +199,6 @@ export class InstagramService {
   private buildCaption = (caption: string, tags: string): string => {
     // return encodeURIComponent(caption + '\n\n' + tags);
     return caption + '\n\n' + tags; // エンコードする必要なかった
-  };
-
-  /**
-   * Facebookページの情報を取得
-   * @returns
-   */
-  getMyFacebookPage = async () => {
-    const endpoint = `${process.env.INSTAGRAM_GRAPH_BASE_PATH}/me/account`;
-    const res = await lastValueFrom(
-      this.httpService.get(endpoint, this.requestOptions),
-    );
-    console.log(res.status, res.data);
-    return res.data;
-  };
-
-  /**
-   * Instagramのビジネスアカウント情報の取得
-   * @returns
-   */
-  getBusinessAccount = async () => {
-    const updatedRequestOptions: RequestOptions = {
-      ...this.requestOptions,
-      params: {
-        ...this.requestOptions.params,
-        fields: 'accounts{instagram_business_account}',
-      },
-    };
-    const endpoint = `${process.env.INSTAGRAM_GRAPH_BASE_PATH}/me`;
-    const res = await lastValueFrom(
-      this.httpService.get(endpoint, updatedRequestOptions),
-    );
-    console.log(res.status, res.data);
-    return res.data;
   };
 
   /**
