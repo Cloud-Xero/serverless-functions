@@ -60,6 +60,16 @@ access to http://localhost:3000/
 
 #### Deploy
 
+#### Memo
+
+- [About how to update long-term access token](https://zenn.dev/yamatoiizuka/articles/f2272e2ecea15d)
+- [About how to use HttpModule](https://docs.nestjs.com/techniques/http-module)
+- [Graph API Explorer](https://developers.facebook.com/tools/explorer/)
+- [Content Publishing Guide](https://developers.facebook.com/docs/instagram-api/guides/content-publishing?locale=ja_JP#--------3)
+- [Instagram User Media Guide](https://developers.facebook.com/docs/instagram-api/reference/ig-user/media#-----)
+- [Reels Publishing Sample Code](https://github.com/fbsamples/reels_publishing_apis/blob/main/insta_reels_publishing_api_sample/index.js)
+- [Access Token Guide](https://developers.facebook.com/docs/facebook-login/guides/access-tokens#usertokens)
+
 ## Installation
 
 ```bash
