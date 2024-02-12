@@ -37,31 +37,36 @@ export class InstagramService {
   ): Promise<string> => {
     let params = {};
 
-    // TODO:オブジェクトではなく、文字列にする（エンコードされたまま投稿されてしまうため）
+    // 拡張子のチェックおよびメディアごとのパラメータの生成
+    const mediaParams = this.getMediaParams(path);
+
     if (mediaType === 'REELS') {
       params = {
         ...this.requestOptions.params,
-        video_url: path,
-        media_type: mediaType,
+        ...mediaParams,
         caption,
         share_to_feed: false,
       };
     } else {
       params = {
         ...this.requestOptions.params,
-        image_url: path,
+        ...mediaParams,
         caption,
       };
     }
 
     console.log('params', params);
 
-    const endpoint = `${process.env.INSTAGRAM_GRAPH_BASE_PATH}/${process.env.INSTAGRAM_ACCOUNT_ID_01}/media`;
-    const res: AxiosResponse = await lastValueFrom(
-      this.httpService.post(endpoint, {}, { params }),
-    );
-    console.log('res.data.id', res.data.id);
-    return res.data.id as string;
+    try {
+      const endpoint = `${process.env.INSTAGRAM_GRAPH_BASE_PATH}/${process.env.INSTAGRAM_ACCOUNT_ID_01}/media`;
+      const res: AxiosResponse = await lastValueFrom(
+        this.httpService.post(endpoint, {}, { params }),
+      );
+      console.log('res.data.id', res.data.id);
+      return res.data.id as string;
+    } catch (error) {
+      console.error('コンテナIDの取得に失敗しました :', error.response.data);
+    }
   };
 
   /**【成功】
@@ -151,7 +156,7 @@ export class InstagramService {
     return new Promise((resolve) => setTimeout(resolve, delay));
   };
 
-  /**【成功】
+  /**
    * メディアの投稿
    * @param creationId
    * @returns ステータスID
@@ -166,11 +171,11 @@ export class InstagramService {
       const res = await lastValueFrom(this.httpService.post(endpoint));
       return res.status;
     } catch (error) {
-      console.error('Error:', error.response.data);
+      console.error('メディアの投稿に失敗しました :', error.response.data);
     }
   };
 
-  /**【成功】
+  /**
    * 改行を施したキャプション文の作成
    * @param caption キャプション
    * @param tags ハッシュタグ
@@ -231,9 +236,13 @@ export class InstagramService {
     // コンテナIDを取得
     const containerId = await this.getContainerId(imagePath, explanation);
 
-    // TODO: try-catchを使用する
-    // メディア投稿
-    return await this.postMedia(containerId);
+    try {
+      // メディア投稿
+      const status = await this.postMedia(containerId);
+      return status;
+    } catch (error) {
+      console.error('フィードの投稿に失敗しました :', error.response.data);
+    }
   };
 
   /**【成功】
@@ -268,9 +277,16 @@ export class InstagramService {
       explanation,
     );
 
-    // TODO: try-catchを使用する
-    // メディア投稿
-    return await this.postMedia(carouselContainerId);
+    try {
+      // メディア投稿
+      const status = await this.postMedia(carouselContainerId);
+      return status;
+    } catch (error) {
+      console.error(
+        'カルーセルフィードの投稿に失敗しました :',
+        error.response.data,
+      );
+    }
   };
 
   /**【成功】
@@ -296,9 +312,13 @@ export class InstagramService {
       'REELS',
     );
 
-    // TODO: try-catchを使用する
-    // メディア投稿
-    return await this.postMedia(containerId);
+    try {
+      // メディア投稿
+      const status = await this.postMedia(containerId);
+      return status;
+    } catch (error) {
+      console.error('リール動画の投稿に失敗しました :', error.response.data);
+    }
   };
 
   /**
