@@ -28,6 +28,7 @@ export class InstagramService {
 
   private ENDPOINT_MAP = {
     MEDIA: `${process.env.INSTAGRAM_GRAPH_BASE_PATH}/${process.env.INSTAGRAM_ACCOUNT_ID_01}/media`,
+    PUBLISH: `${process.env.INSTAGRAM_GRAPH_BASE_PATH}/${process.env.INSTAGRAM_ACCOUNT_ID_01}/media_publish`,
   };
 
   /**
@@ -96,7 +97,7 @@ export class InstagramService {
     if (['mov', 'mp4'].includes(extension)) {
       return {
         video_url: mediaPath,
-        media_type: 'VIDEO',
+        media_type: 'REELS',
       };
     }
 
@@ -110,7 +111,7 @@ export class InstagramService {
    */
   private getItemContainerId = async (mediaPath: string) => {
     const mediaParams = this.getMediaParams(mediaPath);
-    // TODO: 画像か動画かの判断が必要
+
     const params = {
       ...this.requestOptions.params,
     };
@@ -177,13 +178,22 @@ export class InstagramService {
     creationId: string,
     delay = 3000,
   ): Promise<number> => {
-    const endpoint = `${process.env.INSTAGRAM_GRAPH_BASE_PATH}/${process.env.INSTAGRAM_ACCOUNT_ID_01}/media_publish?creation_id=${creationId}&access_token=${process.env.META_ACCESS_TOKEN}`;
+    const params = {
+      ...this.requestOptions.params,
+      creation_id: creationId,
+    };
+    // const endpoint = `${process.env.INSTAGRAM_GRAPH_BASE_PATH}/${process.env.INSTAGRAM_ACCOUNT_ID_01}/media_publish?creation_id=${creationId}&access_token=${process.env.META_ACCESS_TOKEN}`;
+    const endpoint = this.ENDPOINT_MAP.PUBLISH;
+
+    console.log('posting params', params);
 
     // TODO: 時間指定で投稿できるようにする
     try {
       console.log('Waiting for media processing...');
       await this.waitForProcessing(delay);
-      const res = await lastValueFrom(this.httpService.post(endpoint));
+      const res = await lastValueFrom(
+        this.httpService.post(endpoint, {}, { params }),
+      );
       return res.status;
     } catch (error) {
       console.error('メディアの投稿に失敗しました :', error.response.data);
@@ -227,7 +237,7 @@ export class InstagramService {
     }
   };
 
-  /**【成功】
+  /**
    * Instagramにフィード投稿（写真　複数枚）
    * @param record レコード情報
    * @returns
@@ -271,7 +281,7 @@ export class InstagramService {
     }
   };
 
-  /**【成功】
+  /**
    * Instagramにリール動画を投稿
    * @param videoPath 動画のURL（動画はCanvaで制作すること）
    * @param record レコード情報
@@ -295,8 +305,8 @@ export class InstagramService {
     );
 
     try {
-      // メディア投稿
-      const status = await this.postMedia(containerId, 10000);
+      // メディア投稿（10秒遅延だと公開の準備に間に合わずエラーになる）
+      const status = await this.postMedia(containerId, 30000);
       return status;
     } catch (error) {
       console.error('リール動画の投稿に失敗しました :', error.response.data);
