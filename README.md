@@ -22,9 +22,43 @@
   <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
   [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
+## Remaining Tasks
+
+- [ ] Deploy to Cloud Functions using GitHub Actions
+- [ ] Implement posting Stories
+- [ ] Adjust Linter & Formatter
+- [ ] Prepare Cloud Scheduler
+- [ ] Implement to get access token
+- [ ] IaC(Use Terraform)
+- [ ] Implement schedule post
+- [ ] Download the file from Canva & Upload to Notion(if uploading function is implemented)
+- [ ] Use Labeling with GitHub Actions
+- [ ] Update Readme
+- [ ] Use release notes
+
 ## Description
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+
+## Usage
+
+#### Auto post from Notion to Instagram
+
+```bash
+$ pnpm run start:autoPost
+```
+
+access to http://localhost:3000/
+
+#### When add a new module
+
+1. Update `nest-cli.json` (Add the new module to projects field)
+2. Add each values to `.env`
+3. Implement a module to `src/{module}`
+4. Add npm scripts for the new module
+5. Execute `$ pnpm run start:{module}`(`$ pnpm run start:{module}:gdf` uses function framework \*Requires every build process)
+
+#### Deploy
 
 ## Installation
 
