@@ -33,8 +33,13 @@
 - [ ] Implement schedule post
 - [ ] Download the file from Canva & Upload to Notion(if uploading function is implemented)
 - [ ] Use Labeling with GitHub Actions
+  - [ ] PRにサービス名のラベルをつけて、それによってデプロイ先のファンクションを決める
 - [ ] Update Readme
 - [ ] Use release notes
+
+## Batch list
+
+- autoPost
 
 ## Description
 
