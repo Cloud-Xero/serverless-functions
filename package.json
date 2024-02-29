@@ -8,7 +8,7 @@
   "scripts": {
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "build:helloWorld": "nest build helloWorld",
+    "build:helloWorld": "wireit",
     "start:helloWorld": "nest start helloWorld",
     "start:helloWorld:gcf": "pnpm build:helloWorld && cross-env RUNNING_IN_GCF=true functions-framework --source=dist/src/helloWorld/main.js --target=helloWorld",
     "start:helloWorld:prod": "node dist/main",
@@ -17,7 +17,7 @@
     "test:helloWorld:cov": "jest functions-framework --target=helloWorld --coverage",
     "test:helloWorld:debug": "node functions-framework --target=helloWorld --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:helloWorld:e2e": "jest functions-framework --target=helloWorld --config ./test/jest-e2e.json",
-    "build:autoPost": "nest build autoPost",
+    "build:autoPost": "wireit",
     "start:autoPost": "nest start autoPost",
     "start:autoPost:gcf": "pnpm build:autoPost && cross-env RUNNING_IN_GCF=true functions-framework --source=dist/src/autoPost/main.js --target=autoPost",
     "watch:autoPost": "nest start functions-framework --source=src/autoPost/main.ts --target=autoPost --watch",
@@ -25,6 +25,14 @@
     "start:autoPost:prod": "node dist/main",
     "test:autoPost": "jest functions-framework --target=autoPost",
     "test:autoPost:watch": "jest functions-framework --target=autoPost --watch"
+  },
+  "wireit": {
+    "build:helloWorld": {
+      "command": "nest build helloWorld"
+    },
+    "build:autoPost": {
+      "command": "nest build autoPost"
+    }
   },
   "dependencies": {
     "@google-cloud/functions-framework": "^3.3.0",
