@@ -25,20 +25,6 @@
 ## Function List
 - autoPost
 
-## Remaining Tasks for autoPost
-
-- [ ] Deploy to Cloud Functions using GitHub Actions
-- [ ] Implement posting Stories
-- [ ] Adjust Linter & Formatter
-- [ ] Prepare Cloud Scheduler
-- [ ] Implement to get access token
-- [ ] IaC(Use Terraform)
-- [ ] Implement schedule post
-- [ ] Download the file from Canva & Upload to Notion(if uploading function is implemented)
-- [ ] Use Labeling with GitHub Actions
-  - [ ] PRにサービス名のラベルをつけて、それによってデプロイ先のファンクションを決める
-- [ ] Update Readme
-- [ ] Use release notes
 
 ## Batch list
 
